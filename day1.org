@@ -1,0 +1,60 @@
+#+title: Day1
+* Julia
+:LOGBOOK:
+CLOCK: [2022-12-01 Thu 19:20]--[2022-12-01 Thu 19:58] =>  0:38
+:END:
+
+#+begin_src jupyter-julia
+using Pipe
+
+elfCals = @pipe readlines("./input-day1-1.txt") |> cat([""], _, [""], dims=1) # read input
+
+idx=findall(==(""), elfCals)                                                  # find where the spaces are
+splitCals = @. getindex([elfCals], (:).(idx[1:end-1] + 1, idx[2:end] - 1))    # split on spaces
+
+maxCal = @pipe map.(x->parse(Int, x), splitCals) |>                           # parse to ints
+    map(x->sum(x), _) |>                                                      # sum the vectors (each elf)
+    maximum                                                                   # find the maximum
+#+end_src
+
+#+RESULTS:
+: 69836
+
+* Racket
+:LOGBOOK:
+CLOCK: [2022-12-01 Thu 21:45]--[2022-12-01 Thu 22:32] =>  0:47
+CLOCK: [2022-12-01 Thu 21:27]--[2022-12-01 Thu 21:45] =>  0:18
+CLOCK: [2022-12-01 Thu 19:58]--[2022-12-01 Thu 20:15] =>  0:17
+:END:
+#+begin_src racket
+#lang racket
+(require threading)
+
+(define inp (file->lines "./input-day1-1.txt")) ; collect input
+
+(define (partition-on lst elem)                 ; function to partition on the `elem's of a list
+  (define pred (lambda (x) (not (equal? x elem))))
+  (cond
+    ((not (member elem lst)) (cons lst null))
+    ((null? (cdr lst)) null)
+    (else (cons (takef lst pred)
+                (partition-on (cdr (dropf lst pred))
+                              elem)))))
+
+(define (tree-map proc tree)                    ; apply proc to all leaves in tree
+  (cond ((null? tree) null)
+        ((pair? tree)
+         (cons
+          (tree-map proc (car tree))
+          (tree-map proc (cdr tree))))
+        (else (proc tree))))
+
+(~>> inp
+     (partition-on _ "")                        ; partition list on ""
+     (tree-map string->number)                  ; convert leaves to numbers
+     (map (lambda (x) (foldl + 0 x)))           ; sum each sublist
+     (apply max))                               ; find the max of these sums
+#+end_src
+
+#+RESULTS:
+: 69836
