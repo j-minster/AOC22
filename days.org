@@ -1,0 +1,143 @@
+#+title: Day1
+* Day 1
+** Julia
+:LOGBOOK:
+CLOCK: [2022-12-01 Thu 19:20]--[2022-12-01 Thu 19:58] =>  0:38
+:END:
+
+#+begin_src jupyter-julia
+using Pipe
+
+elfCals = @pipe readlines("./input-day1-1.txt") |> cat([""], _, [""], dims=1) # read input
+
+idx=findall(==(""), elfCals)                                                  # find where the spaces are
+splitCals = @. getindex([elfCals], (:).(idx[1:end-1] + 1, idx[2:end] - 1))    # split on spaces
+
+maxCal = @pipe map.(x->parse(Int, x), splitCals) |>                           # parse to ints
+    map(x->sum(x), _) |>                                                      # sum the vectors (each elf)
+    maximum                                                                   # find the maximum
+#+end_src
+
+#+RESULTS:
+: 69836
+
+** Racket
+:LOGBOOK:
+CLOCK: [2022-12-01 Thu 21:45]--[2022-12-01 Thu 22:32] =>  0:47
+CLOCK: [2022-12-01 Thu 21:27]--[2022-12-01 Thu 21:45] =>  0:18
+CLOCK: [2022-12-01 Thu 19:58]--[2022-12-01 Thu 20:15] =>  0:17
+:END:
+#+begin_src racket
+#lang racket
+(require threading)
+
+(define inp (file->lines "./input-day1-1.txt")) ; collect input
+
+(define (partition-on lst elem)                 ; function to partition on the `elem's of a list
+  (define pred (lambda (x) (not (equal? x elem))))
+  (cond
+    ((not (member elem lst)) (cons lst null))
+    ((null? (cdr lst)) null)
+    (else (cons (takef lst pred)
+                (partition-on (cdr (dropf lst pred))
+                              elem)))))
+
+(define (tree-map proc tree)                    ; apply proc to all leaves in tree
+  (cond ((null? tree) null)
+        ((pair? tree)
+         (cons
+          (tree-map proc (car tree))
+          (tree-map proc (cdr tree))))
+        (else (proc tree))))
+
+;; Cleaning input
+
+;; Part 1: Calories of elf with the most food
+(~>> inp
+     (partition-on _ "")                        ; partition list on ""
+     (tree-map string->number)                  ; convert leaves to numbers
+     (map (lambda (x) (foldl + 0 x)))           ; sum each sublist
+     (apply max))                               ; find the max of these sums
+
+;; Part 2: Sum of top 3 elves with most food
+(~>> inp
+     (partition-on _ "")                        ; partition list on ""
+     (tree-map string->number)                  ; convert leaves to numbers
+     (map (lambda (x) (foldl + 0 x)))           ; sum each sublist
+     (sort _ >)                                 ; sort sums in descending order
+     (take _ 3)                                 ; take 3 highest sums
+     (apply +))                                 ; add them together
+#+end_src
+
+#+RESULTS:
+: 69836
+: 207968
+
+#+begin_src racket
+#lang racket
+
+(require advent-of-code)
+(define calorie-data (fetch-aoc-input (find-session) 2022 1)) ; cannot get this working
+
+(define calories (read-aoc-input))      ; cannot get this working
+
+(define (calorie-+ elf)
+  (~>> elf
+     (map string->number)
+     (foldl + 0)))
+
+(~> calories
+    (string-split "\n\n")
+    (map (lambda v (~> v first (string-split "\n") calorie-+)) _)
+    (sort >)
+    (take 3)
+    (foldl + 0 _))
+#+end_src
+
+#+RESULTS:
+* Day 2
+** Julia
+#+begin_src jupyter-julia
+using Pipe
+ingames = @pipe readlines("./input-day2.txt") |> map(x->split(x, " "), _) # read input
+
+# ((A, X), (B, Y), (C, Z)) => (1, 2, 3)
+nums = @pipe ingames .|> replace(_, "A" => 1, "X" =>1, "B" => 2, "Y" => 2, "C" => 3, "Z" => 3)
+
+scorefun = function(g)
+    p = g[1]*g[2];                 # product of game scores
+    g[1]==g[2] ? (3 + g[2]) :      # draw if two shapes are same
+        p==3 && g[2]==3 ? (g[2]) : # loss
+        p==6 && g[2]==2 ? (g[2]) : # loss
+        p==2 && g[2]==1 ? (g[2]) : # loss
+        (6 + g[2])                 # otherwise win!
+end
+
+map(scorefun, nums) |> sum         # score every game, then sum scores
+#+end_src
+
+#+RESULTS:
+: 11475
+
+#+begin_src jupyter-julia
+win(n) = n==1 ? 2 :             # give me the shape I need to win against n
+    n==2 ? 3 :
+    n==3 ? 1 : 0
+
+lose(n) = n==1 ? 3 :            # give me a losing shape
+    n==2 ? 1 :
+    n==3 ? 2 : 0
+
+score2 = function(g)            # calculate my score for a game
+    op = g[1]
+    t = g[2]
+    t==1 ? (lose(op)) :
+        t==2 ? (3 + op) :
+        (6 + win(op))
+end
+
+map(score2, nums) |> sum        # calculate and sum the scores of every game
+#+end_src
+
+#+RESULTS:
+: 16862
