@@ -1,4 +1,3 @@
-#+title: Day1
 * Day 1
 ** Julia
 :LOGBOOK:
@@ -93,8 +92,6 @@ CLOCK: [2022-12-01 Thu 19:58]--[2022-12-01 Thu 20:15] =>  0:17
     (take 3)
     (foldl + 0 _))
 #+end_src
-
-#+RESULTS:
 * Day 2
 ** Julia
 #+begin_src jupyter-julia
