@@ -138,3 +138,42 @@ map(score2, nums) |> sum        # calculate and sum the scores of every game
 
 #+RESULTS:
 : 16862
+* Day 3
+:LOGBOOK:
+CLOCK: [2022-12-04 Sun 15:41]
+CLOCK: [2022-12-04 Sun 15:15]--[2022-12-04 Sun 15:17] =>  0:02
+:END:
+#+begin_src jupyter-julia
+using Pipe
+
+input = readlines("./day3-input.txt")
+
+# construct score lookup dict
+alphabet = cat('a':'z', 'A':'Z', dims=1);
+scores = 1:52;
+scoreLookup = zip(alphabet, scores) |> Dict
+
+inthalf(string) = @pipe string |> length(_)/2 |> convert(Int, _) # find half of contents size
+
+operation(string) = @pipe string |>
+    [(first(_, inthalf(_))), (last(_, inthalf(_)))] |> # split contents
+    intersect(_...) |>                           # find intersection
+    scoreLookup[_...]                                  # lookup score
+
+
+operation.(input) |> sum             # do this for all rucksacks
+#+end_src
+
+#+RESULTS:
+: 7908
+
+#+begin_src jupyter-julia
+using IterTools
+score2 = @pipe partition(input, 3, 3) .|>
+    intersect(_...) .|>
+    scoreLookup[_...] |>
+    sum
+#+end_src
+
+#+RESULTS:
+: 2838
