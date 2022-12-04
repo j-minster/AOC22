@@ -98,8 +98,9 @@ CLOCK: [2022-12-01 Thu 19:58]--[2022-12-01 Thu 20:15] =>  0:17
 using Pipe
 ingames = @pipe readlines("./input-day2.txt") |> map(x->split(x, " "), _) # read input
 
-# ((A, X), (B, Y), (C, Z)) => (1, 2, 3)
-nums = @pipe ingames .|> replace(_, "A" => 1, "X" =>1, "B" => 2, "Y" => 2, "C" => 3, "Z" => 3)
+chars = vcat('A':'C', 'X':'Z');
+repl = zip(string.(chars), repeat(1:3, 2)) |> Dict
+nums = @pipe ingames .|> replace(_, collect(repl)...)
 
 scorefun = function(g)
     p = g[1]*g[2];                 # product of game scores
@@ -139,10 +140,6 @@ map(score2, nums) |> sum        # calculate and sum the scores of every game
 #+RESULTS:
 : 16862
 * Day 3
-:LOGBOOK:
-CLOCK: [2022-12-04 Sun 15:41]
-CLOCK: [2022-12-04 Sun 15:15]--[2022-12-04 Sun 15:17] =>  0:02
-:END:
 #+begin_src jupyter-julia
 using Pipe
 
@@ -150,8 +147,7 @@ input = readlines("./day3-input.txt")
 
 # construct score lookup dict
 alphabet = cat('a':'z', 'A':'Z', dims=1);
-scores = 1:52;
-scoreLookup = zip(alphabet, scores) |> Dict
+scoreLookup = zip(alphabet, 1:52) |> Dict
 
 inthalf(string) = @pipe string |> length(_)/2 |> convert(Int, _) # find half of contents size
 
